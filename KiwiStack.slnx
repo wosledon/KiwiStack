@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/KiwiStack.Api/KiwiStack.Api.csproj" />
+    <Project Path="src/KiwiStack.Front/KiwiStack.Front.csproj" Id="249142c6-409c-4377-993f-63e8d2bde99b" />
+    <Project Path="src/KiwiStack.Shared/KiwiStack.Shared.csproj" />
+  </Folder>
+</Solution>
