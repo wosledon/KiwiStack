@@ -23,14 +23,12 @@ public class ProjectController(
         var projects =
             await _db.Q<Project>()
                 .WhereIf(!string.IsNullOrWhiteSpace(search.Keyword), q => q.Where(p => p.Name.Contains(search.Keyword!) || p.Description.Contains(search.Keyword!)))
-                .WhereIf(CurrentUserRole != Shared.Enums.RoleEnum.Admin, q => q.Where(p => p.OwnerId == CurrentUserId))
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new ProjectDto
                 {
                     Id = p.Id,
                     Name = p.Name,
                     Description = p.Description,
-                    OwnerName = p.Owner != null ? p.Owner.Name : string.Empty,
                     Prefix = p.Prefix,
                     CreatedAt = p.CreatedAt
                 })
@@ -103,7 +101,6 @@ public class ProjectController(
         }
 
         var entity = project.MapTo<Project>();
-        entity.OwnerId = CurrentUserId;
 
         await _db.W.AddAsync(entity);
         await _db.SaveChangesAsync();
@@ -129,7 +126,6 @@ public class ProjectController(
 
         project.Map(entity);
 
-        entity.OwnerId = CurrentUserId;
 
         _db.W.Update(entity);
         await _db.SaveChangesAsync();
