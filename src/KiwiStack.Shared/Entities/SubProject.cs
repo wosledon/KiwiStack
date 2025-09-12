@@ -20,7 +20,7 @@ public class SubProject : EntityBase
 
 
     public Guid? ParentId { get; set; }
-    public SubProject? Parent { get; set; }
+    public virtual SubProject? Parent { get; set; }
 
     // 版本号（语义化版本或自由格式）
     public string Version { get; set; } = "0.0.0";
