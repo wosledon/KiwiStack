@@ -1,7 +1,75 @@
 ﻿@page "/"
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthStateProvider
+@using Microsoft.AspNetCore.Components.Authorization
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<AuthorizeView>
+    <NotAuthorized>
+        <MudGrid Justify="Justify.Center">
+            <MudItem xs="12" sm="8" md="5">
+                <MudCard Elevation="1" Class="mt-8">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">欢迎使用 KiwiStack</MudText>
+                        <MudText Typo="Typo.body2" Class="mt-2">请先登录以继续。</MudText>
+                        <MudButton Href="/login" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">去登录</MudButton>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </NotAuthorized>
+    <Authorized>
+        <MudGrid GutterSize="2">
+            <MudItem xs="12">
+                <MudCard Elevation="1">
+                    <MudCardContent>
+                        <MudText Typo="Typo.h5">欢迎使用 KiwiStack</MudText>
+                        <MudText Typo="Typo.body2" Class="mt-2">请选择一个功能开始使用。</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
 
-Welcome to your new app.
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Href="/project" Hover="true" Elevation="1" Class="mud-width-full">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Color="Color.Primary" />
+                            <MudText Typo="Typo.h6" Class="ml-2">项目</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.body2">查看与管理项目。</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Href="/etljob" Hover="true" Elevation="1" Class="mud-width-full">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudIcon Icon="@Icons.Material.Filled.Hub" Color="Color.Primary" />
+                            <MudText Typo="Typo.h6" Class="ml-2">ETL 作业</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.body2">监控与管理数据任务。</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Href="/settings/project-manager" Hover="true" Elevation="1" Class="mud-width-full">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudIcon Icon="@Icons.Material.Filled.Settings" Color="Color.Primary" />
+                            <MudText Typo="Typo.h6" Class="ml-2">设置</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.body2">系统配置与管理。</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </Authorized>
+</AuthorizeView>

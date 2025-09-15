@@ -1,7 +1,92 @@
 ﻿@page "/project"
+@inject KiwiStack.Front.Auth.ApiClient Api
 
-<h3>ProjectPage</h3>
+<PageTitle>Projects</PageTitle>
+
+<MudPaper Class="pa-3" Elevation="0">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudText Typo="Typo.h5">项目</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_keyword" Variant="Variant.Outlined" Dense="true" Placeholder="搜索项目..."
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" OnDebouncedValueChanged="_ => LoadAsync()" />
+        <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="async _ => await LoadAsync()" />
+    </MudStack>
+</MudPaper>
+
+<MudGrid Class="mt-3" GutterSize="2">
+    @if (_loading)
+    {
+        @for (int i = 0; i < 6; i++)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="1">
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="140px" />
+                </MudCard>
+            </MudItem>
+        }
+    }
+    else if (_projects.Count == 0)
+    {
+        <MudItem xs="12">
+            <MudCard Elevation="1">
+                <MudCardContent>
+                    <MudText Typo="Typo.body1">没有找到项目。</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+    else
+    {
+        @foreach (var p in _projects)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Hover="true" Elevation="1">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudIcon Icon="@Icons.Material.Filled.Folder" Color="Color.Primary" />
+                            <MudText Typo="Typo.h6" Class="ml-2">@p.Name</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.MoreVert" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.body2">@p.Description</MudText>
+                        <MudText Typo="Typo.caption" Class="mt-2 text-secondary">创建时间：@p.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudLink Href="@($"/project/{p.Id}")" Color="Color.Primary">进入</MudLink>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    }
+</MudGrid>
 
 @code {
+    private string? _keyword;
+    private bool _loading;
+    private List<KiwiStack.Shared.Dtos.Project.ProjectDto> _projects = new();
 
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        StateHasChanged();
+        await Task.Delay(150); // 小的过渡以展示 Skeleton
+        var url = $"/api/v1/Project/list?Keyword={Uri.EscapeDataString(_keyword ?? string.Empty)}";
+        var res = await Api.GetAsync<ResultDto>(url);
+        _projects = res?.Data ?? new();
+        _loading = false;
+    }
+
+    private class ResultDto
+    {
+        public List<KiwiStack.Shared.Dtos.Project.ProjectDto> Data { get; set; } = new();
+        public long Total { get; set; }
+    }
 }

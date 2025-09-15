@@ -1,7 +1,137 @@
 ﻿@page "/settings/sub-project-manager"
+@inject KiwiStack.Front.Auth.ApiClient Api
+@using KiwiStack.Shared.Dtos.ProjectComponent
 
-<h3>SubProjectManager</h3>
+<PageTitle>子项目管理</PageTitle>
+
+<MudPaper Class="pa-3" Elevation="0">
+    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+        <MudText Typo="Typo.h5">子项目管理</MudText>
+        <MudSpacer />
+        <MudTextField @bind-Value="_keyword" Variant="Variant.Outlined" Dense="true" Placeholder="搜索子项目..."
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" OnDebouncedValueChanged="_ => LoadAsync()" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">新建</MudButton>
+    </MudStack>
+</MudPaper>
+
+<MudGrid Class="mt-3" GutterSize="2">
+    @if (_loading)
+    {
+        @for (int i = 0; i < 6; i++)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="1"><MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="140px" /></MudCard>
+            </MudItem>
+        }
+    }
+    else if (_items.Count == 0)
+    {
+        <MudItem xs="12">
+            <MudAlert Severity="Severity.Info">暂无数据</MudAlert>
+        </MudItem>
+    }
+    else
+    {
+        @foreach (var it in _items)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Elevation="1" Hover="true">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
+                            <MudText Typo="Typo.h6" Class="ml-2">@it.Name</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenEdit(it)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteAsync(it.Id)" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudText Typo="Typo.body2">@it.Description</MudText>
+                        <MudText Typo="Typo.caption" Class="mt-2 text-secondary">版本：@it.Version</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    }
+</MudGrid>
+
+<MudDialog @bind-IsVisible="_dialogVisible" DisableSidePadding="true">
+    <DialogContent>
+        <MudStack Spacing="2">
+            <MudText Typo="Typo.h6">@(_editing?.Id == Guid.Empty ? "新建子项目" : "编辑子项目")</MudText>
+            <MudTextField @bind-Value="_editing!.Name" Label="名称" Required="true" />
+            <MudTextField @bind-Value="_editing!.Description" Label="描述" Lines="3" />
+            <MudTextField @bind-Value="_editing!.Group" Label="分组" />
+            <MudTextField @bind-Value="_editing!.Version" Label="版本" />
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="() => _dialogVisible = false">取消</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
+    private string? _keyword;
+    private bool _loading;
+    private List<ProjectComponentDto> _items = new();
 
+    private bool _dialogVisible;
+    private ProjectComponentCreateOrUpdateDto? _editing;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true; StateHasChanged();
+        var url = $"/api/v1/ProjectComponent/list?Keyword={Uri.EscapeDataString(_keyword ?? string.Empty)}";
+        var res = await Api.GetAsync<KiwiStack.Shared.Contracts.KiwiResult<List<ProjectComponentDto>>>(url);
+        _items = res?.Data ?? new();
+        _loading = false;
+    }
+
+    private void OpenCreate()
+    {
+        _editing = new ProjectComponentCreateOrUpdateDto();
+        _dialogVisible = true;
+    }
+
+    private void OpenEdit(ProjectComponentDto dto)
+    {
+        _editing = new ProjectComponentCreateOrUpdateDto
+        {
+            Id = dto.Id,
+            Name = dto.Name,
+            Description = dto.Description,
+            Group = dto.Group,
+            Version = dto.Version,
+            ProjectId = dto.ProjectId
+        };
+        _dialogVisible = true;
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_editing is null) return;
+        if (_editing.Id == Guid.Empty)
+        {
+            var resp = await Api.Http.PostAsJsonAsync("/api/v1/ProjectComponent", _editing);
+            if (!resp.IsSuccessStatusCode) return;
+        }
+        else
+        {
+            var resp = await Api.Http.PutAsJsonAsync("/api/v1/ProjectComponent", _editing);
+            if (!resp.IsSuccessStatusCode) return;
+        }
+        _dialogVisible = false;
+        await LoadAsync();
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        var resp = await Api.Http.DeleteAsync($"/api/v1/ProjectComponent/{id}");
+        if (resp.IsSuccessStatusCode)
+            await LoadAsync();
+    }
 }

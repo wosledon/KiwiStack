@@ -1,0 +1,81 @@
+@page "/login"
+@inject KiwiStack.Front.Auth.ApiClient Api
+@inject KiwiStack.Front.Auth.ITokenStorage TokenStorage
+@inject Microsoft.AspNetCore.Components.NavigationManager Nav
+@inject Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider AuthState
+
+<PageTitle>µÇÂ¼</PageTitle>
+
+<MudGrid Justify="Justify.Center">
+    <MudItem xs="12" sm="8" md="4">
+        <MudCard Elevation="1" Class="mt-8">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">µÇÂ¼</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <EditForm Model="_model" OnValidSubmit="LoginAsync">
+                    <DataAnnotationsValidator />
+                    <MudTextField @bind-Value="_model.Account" Label="ÕËºÅ" For="@(() => _model.Account)" Required="true" />
+                    <MudTextField @bind-Value="_model.Password" Label="ÃÜÂë" For="@(() => _model.Password)" Required="true" InputType="InputType.Password" Class="mt-2" />
+                    <ValidationSummary />
+                    @if (!string.IsNullOrEmpty(_error))
+                    {
+                        <MudAlert Severity="Severity.Error" Dense="true" Class="mt-2">@_error</MudAlert>
+                    }
+                    <MudButton Type="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" FullWidth="true" Disabled="_loading">µÇÂ¼</MudButton>
+                </EditForm>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private LoginModel _model = new();
+    private bool _loading;
+    private string? _error;
+
+    private async Task LoginAsync()
+    {
+        try
+        {
+            _loading = true;
+            _error = null;
+            var resp = await Api.PostAsync("/api/v1/Auth/login", new KiwiStack.Shared.Dtos.Auth.LoginDto
+            {
+                Account = _model.Account,
+                Password = _model.Password
+            });
+            if (!resp.IsSuccessStatusCode)
+            {
+                _error = "ÕËºÅ»òÃÜÂë´íÎó";
+                return;
+            }
+            var json = await resp.Content.ReadFromJsonAsync<TokenResponse>();
+            await TokenStorage.SetTokenAsync(json?.Token);
+
+            if (AuthState is KiwiStack.Front.Auth.ApiAuthStateProvider s) s.NotifyAuthenticationStateChanged();
+            Nav.NavigateTo("/");
+        }
+        catch
+        {
+            _error = "µÇÂ¼Ê§°Ü";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private class LoginModel
+    {
+        public string Account { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+    }
+
+    private class TokenResponse
+    {
+        public string? Token { get; set; }
+    }
+}

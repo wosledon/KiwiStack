@@ -6,29 +6,40 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar>
-        My Application
+    <MudAppBar Elevation="0" Dense="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudText Typo="Typo.h6" Class="ml-2">KiwiStack</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.LightMode" Color="Color.Inherit" />
+        <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
+        <MudIconButton Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Inherit" />
     </MudAppBar>
-    <MudDrawer Open="true">
-		<MudNavLink Href="/">Home</MudNavLink>
-        <MudNavLink Href="/project">Projects</MudNavLink>
-        <MudNavLink Href="/etljob">Etl Jobs</MudNavLink>
 
-        <MudNavGroup Title="Settings">
-            <MudNavLink Href="/settings/db-connector-manager">Database Connector Manager</MudNavLink>
-			<MudNavLink Href="/settings/etl-connector-manager">Etl Connector Manager</MudNavLink>
-			<MudNavLink Href="/settings/user-manager">User Manager</MudNavLink>
-			<MudNavLink Href="/settings/project-manager">Project Manager</MudNavLink>
-            <MudNavLink Href="/settings/sub-project-manager">SubProject Manager</MudNavLink>
-			<MudNavLink Href="/settings/user-project-manager">User Project Manager</MudNavLink>
-		</MudNavGroup>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Responsive" Breakpoint="Breakpoint.Md">
+        <MudNavMenu>
+            <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home">主页</MudNavLink>
+            <MudNavLink Href="/project" Icon="@Icons.Material.Filled.Dashboard">项目</MudNavLink>
+            <MudNavLink Href="/etljob" Icon="@Icons.Material.Filled.Hub">ETL 作业</MudNavLink>
+
+            <MudNavGroup Title="设置" Icon="@Icons.Material.Filled.Settings">
+                <MudNavLink Href="/settings/db-connector-manager" Icon="@Icons.Material.Filled.Storage">数据库连接器</MudNavLink>
+                <MudNavLink Href="/settings/etl-connector-manager" Icon="@Icons.Material.Filled.SyncAlt">ETL 连接器</MudNavLink>
+                <MudNavLink Href="/settings/user-manager" Icon="@Icons.Material.Filled.People">用户管理</MudNavLink>
+                <MudNavLink Href="/settings/project-manager" Icon="@Icons.Material.Filled.Build">项目管理</MudNavLink>
+                <MudNavLink Href="/settings/sub-project-manager" Icon="@Icons.Material.Filled.AccountTree">子项目管理</MudNavLink>
+                <MudNavLink Href="/settings/user-project-manager" Icon="@Icons.Material.Filled.AdminPanelSettings">用户项目管理</MudNavLink>
+            </MudNavGroup>
+        </MudNavMenu>
     </MudDrawer>
+
     <MudMainContent>
-        @Body
+        <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+            @Body
+        </MudContainer>
     </MudMainContent>
 </MudLayout>
 
 @code{
-
-
+    private bool _drawerOpen = true;
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 }

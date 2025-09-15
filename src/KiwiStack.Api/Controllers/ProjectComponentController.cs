@@ -36,8 +36,6 @@ public class ProjectComponentController(
                     Name = c.Name,
                     Description = c.Description,
                     ProjectId = c.ProjectId,
-                    Version = c.Version,
-                    IsActive = c.IsActive,
                     CreatedAt = c.CreatedAt
                 })
                 .ToPagedListAsync(search.Page, search.PageSize);
