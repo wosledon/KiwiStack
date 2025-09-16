@@ -28,13 +28,30 @@ builder.Services.AddAuthorizationCore();
 // HttpClient configured for API with auth handler
 builder.Services.AddTransient<AuthMessageHandler>();
 
+// Mock store + handler
+builder.Services.AddSingleton<MockApiStore>();
+builder.Services.AddTransient<MockApiHandler>();
+
 builder.Services.AddScoped(sp =>
 {
     var options = sp.GetRequiredService<ApiOptions>();
-    var handler = sp.GetRequiredService<AuthMessageHandler>();
-    var client = new HttpClient(handler)
+    var authHandler = sp.GetRequiredService<AuthMessageHandler>();
+
+    DelegatingHandler pipeline = authHandler;
+
+    // Enable mock when ApiBaseUrl is empty or equals "mock"
+    if (string.IsNullOrWhiteSpace(options.ApiBaseUrl) || string.Equals(options.ApiBaseUrl, "mock", StringComparison.OrdinalIgnoreCase))
     {
-        BaseAddress = string.IsNullOrWhiteSpace(options.ApiBaseUrl) ? new Uri("/") : new Uri(options.ApiBaseUrl.TrimEnd('/'))
+        var mock = sp.GetRequiredService<MockApiHandler>();
+        mock.InnerHandler = new HttpClientHandler();
+        pipeline = mock; // no auth in mock path
+    }
+
+    var client = new HttpClient(pipeline)
+    {
+        BaseAddress = string.IsNullOrWhiteSpace(options.ApiBaseUrl) || string.Equals(options.ApiBaseUrl, "mock", StringComparison.OrdinalIgnoreCase)
+            ? new Uri("/")
+            : new Uri(options.ApiBaseUrl.TrimEnd('/'))
     };
     return client;
 });
@@ -48,7 +65,7 @@ builder.Services.AddScoped<ApiClient>(sp =>
     return api;
 });
 
-// ·þÎñ
+// services
 builder.Services.AddScoped<ProjectService>();
 
 // mudblazor

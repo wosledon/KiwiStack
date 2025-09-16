@@ -14,47 +14,32 @@
     </MudStack>
 </MudPaper>
 
-<MudGrid Class="mt-3" GutterSize="2">
-    @if (_loading)
-    {
-        @for (int i = 0; i < 6; i++)
-        {
-            <MudItem xs="12" sm="6" md="4">
-                <MudCard Elevation="1"><MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="140px" /></MudCard>
-            </MudItem>
-        }
-    }
-    else if (_items.Count == 0)
-    {
-        <MudItem xs="12">
-            <MudAlert Severity="Severity.Info">暂无数据</MudAlert>
-        </MudItem>
-    }
-    else
-    {
-        @foreach (var it in _items)
-        {
-            <MudItem xs="12" sm="6" md="4">
-                <MudCard Elevation="1" Hover="true">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
-                            <MudText Typo="Typo.h6" Class="ml-2">@it.Name</MudText>
-                        </CardHeaderContent>
-                        <CardHeaderActions>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" OnClick="() => OpenEdit(it)" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="() => DeleteAsync(it.Id)" />
-                        </CardHeaderActions>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudText Typo="Typo.body2">@it.Description</MudText>
-                        <MudText Typo="Typo.caption" Class="mt-2 text-secondary">版本：@it.Version</MudText>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-        }
-    }
-</MudGrid>
+<div class="mt-3">
+    <MudTable Items="_items" Dense="true" Hover="true" Bordered="true" Loading="_loading">
+        <HeaderContent>
+            <MudTh Style="width: 28px"></MudTh>
+            <MudTh>名称</MudTh>
+            <MudTh>描述</MudTh>
+            <MudTh>分组</MudTh>
+            <MudTh>版本</MudTh>
+            <MudTh Style="width: 140px">操作</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="" Class="pa-0"><MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" /></MudTd>
+            <MudTd DataLabel="名称">@context.Name</MudTd>
+            <MudTd DataLabel="描述">@context.Description</MudTd>
+            <MudTd DataLabel="分组">@context.Group</MudTd>
+            <MudTd DataLabel="版本">@context.Version</MudTd>
+            <MudTd DataLabel="操作">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEdit(context)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context.Id)" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.caption" Class="pa-4">暂无数据</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</div>
 
 <MudDialog @bind-IsVisible="_dialogVisible" DisableSidePadding="true">
     <DialogContent>
