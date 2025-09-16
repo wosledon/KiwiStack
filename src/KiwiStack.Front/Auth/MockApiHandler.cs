@@ -24,10 +24,12 @@ public class MockApiHandler(MockApiStore store) : DelegatingHandler
 
         try
         {
+            string? Q(string key) => GetQueryValue(request.RequestUri!, key);
+
             // route: /api/v1/Project/list
             if (path.StartsWith("/api/v1/Project/list", StringComparison.OrdinalIgnoreCase) && method == HttpMethod.Get.Method)
             {
-                var keyword = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query).Get("Keyword");
+                var keyword = Q("Keyword");
                 var list = _store.Projects.AsEnumerable();
                 if (!string.IsNullOrWhiteSpace(keyword))
                     list = list.Where(p => p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) || p.Description.Contains(keyword!, StringComparison.OrdinalIgnoreCase));
@@ -37,7 +39,7 @@ public class MockApiHandler(MockApiStore store) : DelegatingHandler
             // route: /api/v1/DatabaseConnection/list
             if (path.StartsWith("/api/v1/DatabaseConnection/list", StringComparison.OrdinalIgnoreCase) && method == HttpMethod.Get.Method)
             {
-                var keyword = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query).Get("Keyword");
+                var keyword = Q("Keyword");
                 var list = _store.DbConns.AsEnumerable();
                 if (!string.IsNullOrWhiteSpace(keyword))
                     list = list.Where(p => p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) || p.Host.Contains(keyword!, StringComparison.OrdinalIgnoreCase));
@@ -47,7 +49,7 @@ public class MockApiHandler(MockApiStore store) : DelegatingHandler
             // route: /api/v1/ProjectComponent/list
             if (path.StartsWith("/api/v1/ProjectComponent/list", StringComparison.OrdinalIgnoreCase) && method == HttpMethod.Get.Method)
             {
-                var keyword = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query).Get("Keyword");
+                var keyword = Q("Keyword");
                 var list = _store.SubProjects.AsEnumerable();
                 if (!string.IsNullOrWhiteSpace(keyword))
                     list = list.Where(p => p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) || p.Description.Contains(keyword!, StringComparison.OrdinalIgnoreCase));
@@ -57,7 +59,7 @@ public class MockApiHandler(MockApiStore store) : DelegatingHandler
             // route: /api/v1/EtlConnector/list
             if (path.StartsWith("/api/v1/EtlConnector/list", StringComparison.OrdinalIgnoreCase) && method == HttpMethod.Get.Method)
             {
-                var keyword = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query).Get("Keyword");
+                var keyword = Q("Keyword");
                 var list = _store.EtlConns.AsEnumerable();
                 if (!string.IsNullOrWhiteSpace(keyword))
                     list = list.Where(p => p.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) || p.Description.Contains(keyword!, StringComparison.OrdinalIgnoreCase));
@@ -175,7 +177,7 @@ public class MockApiHandler(MockApiStore store) : DelegatingHandler
 
             if (path.StartsWith("/api/v1/User/list", StringComparison.OrdinalIgnoreCase) && method == HttpMethod.Get.Method)
             {
-                var keyword = System.Web.HttpUtility.ParseQueryString(request.RequestUri!.Query).Get("Keyword");
+                var keyword = Q("Keyword");
                 var list = _store.Users.AsEnumerable();
                 if (!string.IsNullOrWhiteSpace(keyword))
                     list = list.Where(p => p.Account.Contains(keyword, StringComparison.OrdinalIgnoreCase) || p.Name.Contains(keyword!, StringComparison.OrdinalIgnoreCase));
@@ -214,6 +216,23 @@ public class MockApiHandler(MockApiStore store) : DelegatingHandler
         }
 
         return await base.SendAsync(request, cancellationToken);
+    }
+
+    private static string? GetQueryValue(Uri uri, string key)
+    {
+        var query = uri.Query;
+        if (string.IsNullOrEmpty(query)) return null;
+        var parts = query.AsSpan().TrimStart('?').ToString().Split('&', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var p in parts)
+        {
+            var idx = p.IndexOf('=');
+            if (idx <= 0) continue;
+            var k = Uri.UnescapeDataString(p[..idx]);
+            if (!string.Equals(k, key, StringComparison.OrdinalIgnoreCase)) continue;
+            var v = Uri.UnescapeDataString(p[(idx + 1)..]);
+            return v;
+        }
+        return null;
     }
 
     private static HttpResponseMessage Ok<T>(KiwiResult<T> result) where T : class

@@ -14,9 +14,12 @@ public class ApiClient(HttpClient http, IOptions<ApiOptions> options)
 
     public void ConfigureBaseAddress()
     {
-        if (!string.IsNullOrWhiteSpace(options.Value.ApiBaseUrl))
+        var raw = options.Value.ApiBaseUrl?.Trim() ?? string.Empty;
+        // Skip when mock or invalid
+        if (string.Equals(raw, "mock", StringComparison.OrdinalIgnoreCase)) return;
+        if (Uri.TryCreate(raw.TrimEnd('/'), UriKind.Absolute, out var uri))
         {
-            Http.BaseAddress = new Uri(options.Value.ApiBaseUrl.TrimEnd('/'));
+            Http.BaseAddress = uri;
         }
     }
 
